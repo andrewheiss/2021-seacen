@@ -1,4 +1,4 @@
-# Introduction to the tidyverse +<br>data visualization with ggplot2
+# Introduction to the tidyverse + data visualization with ggplot2
 
 **Andrew Heiss**  
 Andrew Young School of Policy Studies  
