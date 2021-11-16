@@ -1,0 +1,1897 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Data visualization with ggplot2</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Andrew Heiss" />
+    <meta name="date" content="2021-11-17" />
+    <script src="libs/header-attrs-2.11/header-attrs.js"></script>
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/tile-view-0.2.6/tile-view.css" rel="stylesheet" />
+    <script src="libs/tile-view-0.2.6/tile-view.js"></script>
+    <script src="libs/clipboard-2.0.6/clipboard.min.js"></script>
+    <link href="libs/shareon-1.4.1/shareon.min.css" rel="stylesheet" />
+    <script src="libs/shareon-1.4.1/shareon.min.js"></script>
+    <link href="libs/xaringanExtra-shareagain-0.2.6/shareagain.css" rel="stylesheet" />
+    <script src="libs/xaringanExtra-shareagain-0.2.6/shareagain.js"></script>
+    <link href="libs/countdown-0.3.5/countdown.css" rel="stylesheet" />
+    <script src="libs/countdown-0.3.5/countdown.js"></script>
+    <link rel="stylesheet" href="css/ath-slides.css" type="text/css" />
+    <link rel="stylesheet" href="css/ath-inferno-fonts.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+
+
+
+
+
+
+
+
+class: center middle main-title section-title-5
+
+# Data visualization&lt;br&gt;with ggplot2
+
+.class-info[
+&lt;figure&gt;
+  &lt;img src="img/ggplot-logo.png" alt="ggplot" title="ggplot" width="15%"&gt;
+&lt;/figure&gt;
+]
+
+---
+
+layout: true
+class: title title-5
+
+---
+
+# Just show me the data!
+
+
+
+--
+
+.pull-left-3.small-code[
+
+```r
+head(my_data, 10)
+```
+
+```
+## # A tibble: 10 × 2
+##        x     y
+##    &lt;dbl&gt; &lt;dbl&gt;
+##  1  55.4  97.2
+##  2  51.5  96.0
+##  3  46.2  94.5
+##  4  42.8  91.4
+##  5  40.8  88.3
+##  6  38.7  84.9
+##  7  35.6  79.9
+##  8  33.1  77.6
+##  9  29.0  74.5
+## 10  26.2  71.4
+```
+]
+
+--
+
+.pull-middle-3.small-code[
+
+```r
+mean(my_data$x)
+```
+
+```
+*## [1] 54.26327
+```
+
+```r
+mean(my_data$y)
+```
+
+```
+*## [1] 47.83225
+```
+
+```r
+cor(my_data$x, my_data$y)
+```
+
+```
+*## [1] -0.06447185
+```
+]
+
+--
+
+.pull-right-3[
+&amp;nbsp;
+
+.box-inv-5[Seems reasonable]
+
+&amp;nbsp;
+
+.box-inv-5[Seems reasonable]
+
+&amp;nbsp;
+
+.box-inv-5[No correlation]
+]
+
+---
+
+# oh no
+
+.center[
+&lt;figure&gt;
+  &lt;img src="img/DinoSequentialSmaller.gif" alt="Datasaurus Dozen" title="Datasaurus Dozen" width="100%"&gt;
+  &lt;figcaption&gt;&lt;a href="https://www.autodeskresearch.com/publications/samestats" target="_blank"&gt;The Datasaurus Dozen&lt;/a&gt;&lt;/figcaption&gt;
+&lt;/figure&gt;
+]
+
+---
+
+# Raw data is not enough
+
+.box-inv-5.small[Each of these has the same mean, standard deviation, variance, and correlation]
+
+&lt;img src="02_grammar-of-graphics_files/figure-html/plot-full-dozen-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+
+---
+
+# BMI and daily steps
+
+.small[
+
+&gt; Consider the following (alternative, not null) hypotheses:
+&gt;
+&gt; 1. There is a difference in the mean number of steps between women and men
+&gt; 2. The correlation coefficient between steps and BMI is negative for women
+&gt; 3. The correlation coefficient between steps and BMI is positive for men
+&gt;
+&gt; Think about which test to use and calculate the corresponding p-value.
+&gt;
+&gt; What conclusions can you draw from the data?
+
+]
+
+---
+
+layout: false
+
+&lt;style type="text/css"&gt;
+.wide pre code {
+  white-space: pre-wrap;
+}
+&lt;/style&gt;
+
+.left-code.wide[
+
+```r
+library(tidyverse)
+bmi_data &lt;- read_csv("data/bmi_data.csv")
+
+head(bmi_data)
+```
+
+```
+## # A tibble: 6 × 3
+##     bmi   steps sex   
+##   &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt; 
+## 1  27.9   401.  Male  
+## 2  28.4  6204.  Male  
+## 3  12.4  8723.  Female
+## 4  24.5 11241.  Male  
+## 5  17.5  5109.  Female
+## 6  23.5    73.0 Female
+```
+]
+
+--
+
+.right-code.wide.small[
+
+```r
+t.test(steps ~ sex, data = bmi_data)
+```
+
+```
+## 
+## 	Welch Two Sample t-test
+## 
+## data:  steps by sex
+## t = -6.5215, df = 1759.9, p-value = 9.069e-11
+## alternative hypothesis: true difference in means between group Female and group Male is not equal to 0
+## 95 percent confidence interval:
+##  -1408.8005  -757.3441
+## sample estimates:
+## mean in group Female   mean in group Male 
+##             6769.378             7852.450
+```
+
+```r
+bmi_data %&gt;% 
+  group_by(sex) %&gt;% 
+  summarize(correlation = cor(bmi, steps))
+```
+
+```
+## # A tibble: 2 × 2
+##   sex    correlation
+##   &lt;chr&gt;        &lt;dbl&gt;
+## 1 Female      -0.306
+## 2 Male        -0.192
+```
+]
+
+???
+
+- https://www.biorxiv.org/content/10.1101/2020.07.30.228916
+- https://ivelasq.rbind.io/blog/reticulate-data-recreation/
+
+---
+
+layout: true
+class: title title-5
+
+---
+
+# Raw numbers are not enough!
+
+.pull-left[
+.small[
+
+&gt; Examine the data appropriately! 
+
+&gt; What do you notice?
+
+&gt; What conclusions can you draw from the data?
+
+]]
+
+--
+
+.pull-right[
+&lt;img src="02_grammar-of-graphics_files/figure-html/gorilla-bmi-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+
+# Beauty is necessary to see patterns
+
+.pull-left[
+
+&lt;figure&gt;
+  &lt;img src="img/amount-diffs-table.png" alt="Amount donated table" title="Amount donated table" width="100%"&gt;
+&lt;/figure&gt;
+
+]
+
+--
+
+.pull-right.center[
+
+&lt;figure&gt;
+  &lt;img src="img/amount-diffs.png" alt="Amount donated graph" title="Amount donated graph" width="85%"&gt;
+&lt;/figure&gt;
+
+]
+
+---
+
+layout: false
+class: middle
+
+.box-5.large[Beauty is necessary&lt;br&gt;for finding truth]
+
+---
+
+layout: true
+class: title title-5
+
+---
+
+# Applied data science
+
+.center[
+&lt;figure&gt;
+  &lt;img src="img/cover.png" alt="R for Data Science" title="R for Data Science" width="28%"&gt;
+  &lt;figcaption&gt;&lt;a href=""&gt;R for Data Science, free online!&lt;/a&gt;&lt;/figcaption&gt;
+&lt;/figure&gt;
+]
+
+---
+
+# Applied data science
+
+.center[
+&lt;figure&gt;
+  &lt;img src="img/data-science-workflow.png" alt="Data science workflow" title="Data science workflow" width="100%"&gt;
+&lt;/figure&gt;
+]
+
+---
+
+layout: false
+name: grammar-of-graphics
+class: center middle section-title section-title-5 animated fadeIn
+
+# The Grammar of Graphics
+
+---
+
+layout: true
+class: title title-5
+
+---
+
+# Mapping data to aesthetics
+
+.pull-left.center[
+
+&lt;figure&gt;
+  &lt;img src="img/gg-book.jpg" alt="Grammar of Graphics book" title="Grammar of Graphics book" width="55%"&gt;
+&lt;/figure&gt;
+
+]
+
+.pull-right[
+
+.box-inv-5.medium[Aesthetic]
+
+.box-5[Visual property of a graph]
+
+.box-5.sp-after[Position, shape, color, etc.]
+
+.box-inv-5.medium[Data]
+
+.box-5[A column in a dataset]
+
+]
+
+---
+
+layout: false
+class: title title-5 section-title-inv-5
+
+# Your turn #1
+
+.box-5.medium[Watch this video]
+
+.box-5.medium[andhs.co/rosling]
+
+.box-5[Make a list of all the variables shown in the graph&lt;br&gt;(think about columns in a dataset)]
+
+.box-5[Make a list of how those variables are shown in the graph&lt;br&gt;(think about the graph's aesthetics and geometries)]
+
+<div class="countdown" id="timer_619428c4" style="right:0;bottom:0;font-size:1.5em;" data-warnwhen="0">
+<code class="countdown-time"><span class="countdown-digits minutes">05</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+
+---
+
+class: bg-full
+background-image: url("img/rosling-tedx.jpg")
+
+???
+
+Source: [New York Times](https://www.nytimes.com/2017/02/09/world/europe/hans-rosling-dead-statistician.html)
+
+---
+
+layout: true
+class: title title-5
+
+---
+
+# Mapping data to aesthetics
+
+&lt;table&gt;
+  &lt;tr&gt;
+    &lt;th class="cell-left"&gt;Data&lt;/th&gt;
+    &lt;th class="cell-left"&gt;Aesthetic&lt;/th&gt;
+    &lt;th class="cell-left"&gt;Geometry&lt;/th&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;Wealth (GDP/capita)&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Position (x-axis)&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Point&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;Health (Life expectancy)&amp;emsp;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Position (y-axis)&amp;emsp;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Point&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;Continent&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Color&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Point&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;Population&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Size&amp;emsp;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Point&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;Year&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Time&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Animation&amp;emsp;&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;
+
+---
+
+# Mapping data to aesthetics
+
+&lt;table&gt;
+  &lt;tr&gt;
+    &lt;th class="cell-left"&gt;Data&lt;/th&gt;
+    &lt;th class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;aes()&lt;/code&gt;&lt;/th&gt;
+    &lt;th class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;geom&lt;/code&gt;&lt;/th&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;Wealth (GDP/capita)&lt;/td&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;x&lt;/code&gt;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;geom_point()&lt;/code&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;Health (Life expectancy)&amp;emsp;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;y&lt;/code&gt;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;geom_point()&lt;/code&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;Continent&lt;/td&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;color&lt;/code&gt;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;geom_point()&lt;/code&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;Population&lt;/td&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;size&lt;/code&gt;&amp;emsp;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;geom_point()&lt;/code&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;Year&lt;/td&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;transition&lt;/code&gt;&amp;emsp;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;transition_time()&lt;/code&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;
+
+---
+
+# `ggplot()` template
+
+
+&lt;code class ='r hljs remark-code'&gt;ggplot(data = &lt;b&gt;&lt;span style="background-color:#CBB5FF"&gt;DATA&lt;/span&gt;&lt;/b&gt;) +&lt;br&gt;&amp;nbsp;&amp;nbsp;&lt;b&gt;&lt;span style="background-color:#FFDFD1"&gt;GEOM_FUNCTION&lt;/span&gt;&lt;/b&gt;(mapping = aes(&lt;b&gt;&lt;span style="background-color:#FFD0CF"&gt;AESTHETIC MAPPINGS&lt;/span&gt;&lt;/b&gt;))&lt;/code&gt;
+
+--
+
+
+&lt;code class ='r hljs remark-code'&gt;ggplot(data = &lt;b&gt;&lt;span style="background-color:#CBB5FF"&gt;gapminder_2007&lt;/span&gt;&lt;/b&gt;) +&lt;br&gt;&amp;nbsp;&amp;nbsp;&lt;b&gt;&lt;span style="background-color:#FFDFD1"&gt;geom_point&lt;/span&gt;&lt;/b&gt;(mapping = aes(&lt;b&gt;&lt;span style="background-color:#FFD0CF"&gt;x = gdpPercap&lt;/span&gt;&lt;/b&gt;, &lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;b&gt;&lt;span style="background-color:#FFD0CF"&gt;y = lifeExp&lt;/span&gt;&lt;/b&gt;,&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;b&gt;&lt;span style="background-color:#FFD0CF"&gt;color = continent&lt;/span&gt;&lt;/b&gt;, &lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;b&gt;&lt;span style="background-color:#FFD0CF"&gt;size = pop&lt;/span&gt;&lt;/b&gt;)))&lt;/code&gt;
+
+---
+
+layout: false
+
+
+
+.box-5[This is a dataset named `gapminder_2007`:]
+
+.small[
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:center;"&gt; country &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; continent &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; gdpPercap &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; lifeExp &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; pop &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:center;"&gt; Afghanistan &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; Asia &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 974.5803384 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 43.828 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 31889923 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:center;"&gt; Albania &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; Europe &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 5937.029526 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 76.423 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 3600523 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:center;"&gt; … &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; … &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; … &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; … &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; … &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+]
+
+--
+
+
+&lt;code class ='r hljs remark-code'&gt;ggplot(data = &lt;b&gt;&lt;span style="background-color:#CBB5FF"&gt;gapminder_2007&lt;/span&gt;&lt;/b&gt;,&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;mapping = aes(&lt;b&gt;&lt;span style="background-color:#FFD0CF"&gt;x = gdpPercap&lt;/span&gt;&lt;/b&gt;, &lt;b&gt;&lt;span style="background-color:#FFD0CF"&gt;y = lifeExp&lt;/span&gt;&lt;/b&gt;,&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;b&gt;&lt;span style="background-color:#FFD0CF"&gt;color = continent&lt;/span&gt;&lt;/b&gt;, &lt;b&gt;&lt;span style="background-color:#FFD0CF"&gt;size = pop&lt;/span&gt;&lt;/b&gt;)) +&lt;br&gt;&amp;nbsp;&amp;nbsp;&lt;b&gt;&lt;span style="background-color:#FFDFD1"&gt;geom_point&lt;/span&gt;&lt;/b&gt;() +&lt;br&gt;&amp;nbsp;&amp;nbsp;scale_x_log10()&lt;/code&gt;
+
+---
+
+layout: true
+class: title title-5
+
+---
+
+# Health and wealth
+
+&lt;img src="02_grammar-of-graphics_files/figure-html/show-basic-gapminder-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Aesthetics
+
+.pull-left-3[
+
+.box-inv-5.small[`color` (discrete)]
+
+&lt;img src="02_grammar-of-graphics_files/figure-html/aes-color-discrete-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+
+.box-inv-5.small[`color` (continuous)]
+
+&lt;img src="02_grammar-of-graphics_files/figure-html/aes-color-continuous-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+.pull-middle-3[
+
+.box-inv-5.small[`size`]
+
+&lt;img src="02_grammar-of-graphics_files/figure-html/aes-size-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+
+.box-inv-5.small[`fill`]
+
+&lt;img src="02_grammar-of-graphics_files/figure-html/aes-fill-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+.pull-right-3[
+
+.box-inv-5.small[`shape`]
+
+&lt;img src="02_grammar-of-graphics_files/figure-html/aes-shape-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+
+.box-inv-5.small[`alpha`]
+
+&lt;img src="02_grammar-of-graphics_files/figure-html/aes-alpha-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+layout: false
+class: bg-90
+background-image: url("img/lter_penguins.png")
+
+???
+
+Artwork by @allison_horst
+
+https://github.com/allisonhorst/palmerpenguins
+
+---
+
+class: bg-90
+background-image: url("img/culmen_depth.png")
+
+???
+
+Artwork by @allison_horst
+
+https://github.com/allisonhorst/palmerpenguins
+
+---
+
+layout: false
+
+
+```r
+ggplot(data = penguins) +
+  geom_point(mapping = aes(x = flipper_length_mm, 
+                           y = body_mass_g, color = species))
+```
+
+&lt;img src="02_grammar-of-graphics_files/figure-html/unnamed-chunk-4-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+
+---
+
+class: title title-5 section-title-inv-5
+
+# Your turn #2
+
+.box-5[Add color, size, alpha, and shape aesthetics to your graph.]
+
+.box-5[Experiment!]
+
+.box-5[Do different things happen when you map&lt;br&gt;aesthetics to discrete and continuous variables?]
+
+.box-5[What happens when you use more than one aesthetic?]
+
+<div class="countdown" id="timer_61942b06" style="right:0;bottom:0;" data-warnwhen="0">
+<code class="countdown-time"><span class="countdown-digits minutes">04</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+
+---
+
+class: title title-5
+
+# How would you make this plot?
+
+&lt;img src="02_grammar-of-graphics_files/figure-html/unnamed-chunk-6-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+
+---
+
+.left-code[
+
+```r
+ggplot(penguins) +
+  geom_point(aes(x = body_mass_g, 
+                 y = bill_length_mm, 
+                 color = species))
+```
+]
+
+.right-plot[
+![](02_grammar-of-graphics_files/figure-html/color-aes-example-1.png)
+]
+
+---
+
+.left-code[
+
+```r
+ggplot(penguins) +
+  geom_point(aes(x = body_mass_g, 
+                 y = bill_length_mm), 
+             color = "blue")
+```
+]
+
+.right-plot[
+![](02_grammar-of-graphics_files/figure-html/color-set-example-1.png)
+]
+
+---
+
+.pull-left[
+.small[
+
+```r
+ggplot(penguins) +
+  geom_point(aes(x = body_mass_g, 
+                 y = bill_length_mm, 
+                 color = "blue"))
+```
+
+&lt;img src="02_grammar-of-graphics_files/figure-html/unnamed-chunk-7-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+]
+
+.pull-right[
+.small[
+
+```r
+ggplot(penguins) +
+  geom_point(aes(x = body_mass_g, 
+                 y = bill_length_mm), 
+             color = "blue")
+```
+
+&lt;img src="02_grammar-of-graphics_files/figure-html/unnamed-chunk-8-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+]
+
+---
+
+layout: true
+class: title title-5
+
+---
+
+# Same aesthetics, different geoms
+
+.pull-left[
+&lt;img src="02_grammar-of-graphics_files/figure-html/unnamed-chunk-9-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+.pull-right[
+&lt;img src="02_grammar-of-graphics_files/figure-html/unnamed-chunk-10-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+# Geoms
+
+
+&lt;code class ='r hljs remark-code'&gt;ggplot(data = &lt;b&gt;&lt;span style="background-color:#CBB5FF"&gt;DATA&lt;/span&gt;&lt;/b&gt;) +&lt;br&gt;&amp;nbsp;&amp;nbsp;&lt;b&gt;&lt;span style="background-color:#FFDFD1"&gt;GEOM_FUNCTION&lt;/span&gt;&lt;/b&gt;(mapping = aes(&lt;b&gt;&lt;span style="background-color:#FFD0CF"&gt;AESTHETIC MAPPINGS&lt;/span&gt;&lt;/b&gt;))&lt;/code&gt;
+
+---
+
+# Possible geoms
+
+&lt;table&gt;
+  &lt;tr&gt;
+    &lt;th class="cell-left"&gt;&lt;/th&gt;
+    &lt;th class="cell-left"&gt;Example geom&lt;/th&gt;
+    &lt;th class="cell-left"&gt;What it makes&lt;/th&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;&lt;img src="img/geom_bar.png"&gt;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;geom_col()&lt;/code&gt;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Bar charts&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;&lt;img src="img/geom_text.png"&gt;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;geom_text()&lt;/code&gt;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Text&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;&lt;img src="img/geom_point.png"&gt;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;geom_point()&lt;/code&gt;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Points&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;&lt;img src="img/geom_boxplot.png"&gt;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;geom_boxplot()&lt;/code&gt;&amp;emsp;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Boxplots&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;&lt;img src="img/geom_sf.png"&gt;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;geom_sf()&lt;/code&gt;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Maps&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;
+
+---
+
+# Possible geoms
+
+.box-inv-5[There are dozens of possible geoms!]
+
+.box-5[See [the **ggplot2** documentation](https://ggplot2.tidyverse.org/reference/index.html#section-layer-geoms) for&lt;br&gt;complete examples of all the different geom layers]
+
+.box-5[Also see the ggplot cheatsheet]
+
+---
+
+layout: false
+class: title title-5 section-title-inv-5
+
+# Your turn #3
+
+.box-5[Replace this scatterplot with boxplots. Use the cheatsheet.]
+
+.pull-left[
+&lt;img src="02_grammar-of-graphics_files/figure-html/unnamed-chunk-11-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+.pull-right[
+&lt;img src="02_grammar-of-graphics_files/figure-html/unnamed-chunk-12-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+<div class="countdown" id="timer_61942916" style="right:0;bottom:0;" data-warnwhen="0">
+<code class="countdown-time"><span class="countdown-digits minutes">02</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+
+---
+
+class: section-title-inv-5
+
+.left-code[
+
+```r
+ggplot(penguins) +
+  geom_boxplot(aes(x = species, 
+                   y = body_mass_g))
+```
+]
+
+.right-plot[
+![](02_grammar-of-graphics_files/figure-html/your-turn-3-1.png)
+]
+
+---
+
+class: title title-5 section-title-inv-5
+
+# Your turn #4
+
+.box-5[Make a histogram of `bill_length_mm`. Use the cheetsheet.&lt;br&gt;Hint: don't supply a `y` variable.]
+
+&lt;img src="02_grammar-of-graphics_files/figure-html/unnamed-chunk-14-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+
+<div class="countdown" id="timer_61942938" style="right:0;bottom:0;" data-warnwhen="0">
+<code class="countdown-time"><span class="countdown-digits minutes">02</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+
+---
+
+class: section-title-inv-5
+
+.left-code[
+
+```r
+ggplot(penguins) +
+  geom_histogram(aes(x = bill_length_mm),
+                 binwidth = 1, 
+                 color = "white")
+```
+]
+
+.right-plot[
+![](02_grammar-of-graphics_files/figure-html/your-turn-4-1.png)
+]
+
+---
+
+class: title title-5 section-title-inv-5
+
+# Your turn #5
+
+.box-5[Make this density plot of `bill_length_mm` filled by `species`.&lt;br&gt;Use the cheatsheet. Hint: don't supply a `y` variable.]
+
+&lt;img src="02_grammar-of-graphics_files/figure-html/unnamed-chunk-16-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+
+<div class="countdown" id="timer_6194290b" style="right:0;bottom:0;" data-warnwhen="0">
+<code class="countdown-time"><span class="countdown-digits minutes">02</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+
+---
+
+class: section-title-inv-5
+
+.left-code[
+
+```r
+ggplot(penguins) +
+  geom_density(aes(x = bill_length_mm, 
+                   fill = species),
+               alpha = 0.75)
+```
+]
+
+.right-plot[
+![](02_grammar-of-graphics_files/figure-html/your-turn-5-1.png)
+]
+
+---
+
+class: title title-5
+
+# Complex graphs!
+
+&lt;img src="02_grammar-of-graphics_files/figure-html/unnamed-chunk-18-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+
+---
+
+class: title title-5 section-title-inv-5
+
+# Your turn #6
+
+.box-5[Predict what this code will do. Then run it.]
+
+
+```r
+ggplot(data = penguins) +
+  geom_point(mapping = aes(x = body_mass_g, 
+                           y = bill_depth_mm, 
+                           color = species)) +
+  geom_smooth(mapping = aes(x = body_mass_g, 
+                            y = bill_depth_mm, 
+                            color = species))
+```
+
+<div class="countdown" id="timer_619428d2" style="right:0;bottom:0;" data-warnwhen="0">
+<code class="countdown-time"><span class="countdown-digits minutes">01</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+
+---
+
+class: section-title-inv-5
+
+.left-code[
+
+```r
+ggplot(data = penguins) +
+  geom_point(aes(x = body_mass_g, 
+                 y = bill_depth_mm, 
+                 color = species)) +
+  geom_smooth(aes(x = body_mass_g, 
+                  y = bill_depth_mm, 
+                  color = species))
+```
+]
+
+.right-plot[
+![](02_grammar-of-graphics_files/figure-html/your-turn-6-1.png)
+]
+
+---
+
+class: title title-5
+
+# Global vs. local
+
+.box-inv-5[Any aesthetics in `ggplot()` will show up in all `geom_` layers]
+
+.small[
+
+```r
+ggplot(penguins, aes(x = body_mass_g, y = bill_depth_mm, color = species)) +
+  geom_point() + 
+  geom_smooth()
+```
+
+&lt;img src="02_grammar-of-graphics_files/figure-html/unnamed-chunk-21-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+class: title title-5
+
+# Global vs. local
+
+.box-inv-5[Any aesthetics in `geom_` layers only apply to that layer]
+
+.small[
+
+```r
+ggplot(penguins, mapping = aes(x = body_mass_g, y = bill_depth_mm)) +
+  geom_point(mapping = aes(color = species)) +
+  geom_smooth(method = "lm")
+```
+
+&lt;img src="02_grammar-of-graphics_files/figure-html/unnamed-chunk-22-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+layout: true
+class: title title-5
+
+---
+
+# Gammar components as layers
+
+.pull-left[
+.box-inv-5[So far we know about data, aesthetics, and geometries]
+
+.box-inv-5[Think of these&lt;br&gt;components as **layers**]
+
+.box-inv-5[Add them to foundational `ggplot()` with `+`]
+]
+
+.pull-right[
+
+&amp;nbsp;
+
+![](img/ggplot-layers-short@4x.png)
+]
+
+???
+
+Layer analogy borrowed from [Thomas Lin Pedersen](https://www.data-imaginist.com/) and his ["Drawing Anything with ggplot2" workshop](https://github.com/thomasp85/ggplot2_workshop).
+
+---
+
+# Additional layers
+
+.pull-left[
+.box-inv-5[There are many of other grammatical layers we can use to describe graphs!]
+
+.box-inv-5[We sequentially add layers onto the foundational `ggplot()` plot to create complex figures]
+]
+
+.pull-right[
+![](img/ggplot-layers@4x.png)
+]
+
+---
+
+# Putting it all together
+
+.box-inv-5.medium[We can build a plot sequentially&lt;br&gt;to see how each grammatical layer&lt;br&gt;changes the appearance]
+
+---
+
+layout: false
+
+.left-code[
+.box-5[Start with data and aesthetics]
+
+
+```r
+*ggplot(data = penguins,
+*      mapping = aes(x = body_mass_g,
+*                    y = bill_depth_mm,
+*                    color = species))
+```
+]
+
+.right-plot[
+![](02_grammar-of-graphics_files/figure-html/penguin-layers-1-1.png)
+]
+
+---
+
+.left-code[
+.box-5[Add a point geom]
+
+
+```r
+ggplot(data = penguins, 
+       mapping = aes(x = body_mass_g,
+                     y = bill_depth_mm,
+                     color = species)) +
+* geom_point()
+```
+]
+
+.right-plot[
+![](02_grammar-of-graphics_files/figure-html/penguin-layers-2-1.png)
+]
+
+---
+
+.left-code[
+.box-5[Add a smooth geom]
+
+
+```r
+ggplot(data = penguins, 
+       mapping = aes(x = body_mass_g,
+                     y = bill_depth_mm,
+                     color = species)) +
+  geom_point() +
+* geom_smooth()
+```
+]
+
+.right-plot[
+![](02_grammar-of-graphics_files/figure-html/penguin-layers-3-1.png)
+]
+
+---
+
+.left-code[
+.box-5[Make it straight]
+
+
+```r
+ggplot(data = penguins, 
+       mapping = aes(x = body_mass_g,
+                     y = bill_depth_mm,
+                     color = species)) +
+  geom_point() +
+* geom_smooth(method = "lm")
+```
+]
+
+.right-plot[
+![](02_grammar-of-graphics_files/figure-html/penguin-layers-4-1.png)
+]
+
+---
+
+.left-code[
+.box-5[Use a viridis color scale]
+
+
+```r
+ggplot(data = penguins, 
+       mapping = aes(x = body_mass_g,
+                     y = bill_depth_mm,
+                     color = species)) +
+  geom_point() +
+  geom_smooth(method = "lm") + 
+* scale_color_viridis_d()
+```
+]
+
+.right-plot[
+![](02_grammar-of-graphics_files/figure-html/penguin-layers-5-1.png)
+]
+
+---
+
+.left-code[
+.box-5[Facet by island]
+
+
+```r
+ggplot(data = penguins, 
+       mapping = aes(x = body_mass_g,
+                     y = bill_depth_mm,
+                     color = species)) +
+  geom_point() +
+  geom_smooth(method = "lm") + 
+  scale_color_viridis_d() +
+* facet_wrap(vars(island), ncol = 1)
+```
+]
+
+.right-plot[
+![](02_grammar-of-graphics_files/figure-html/penguin-layers-6-1.png)
+]
+
+---
+
+.left-code[
+.box-5[Add labels]
+
+
+```r
+ggplot(data = penguins, 
+       mapping = aes(x = body_mass_g,
+                     y = bill_depth_mm,
+                     color = species)) +
+  geom_point() +
+  geom_smooth(method = "lm") + 
+  scale_color_viridis_d() +
+  facet_wrap(vars(island), ncol = 1) +
+* labs(x = "Body mass (g)", y = "Bill depth (mm)",
+*      color = "Species",
+*      title = "Heavier penguins have taller bills",
+*      subtitle = "And penguins live on different islands!",
+*      caption = "Penguins!")
+```
+]
+
+.right-plot[
+![](02_grammar-of-graphics_files/figure-html/penguin-layers-7-1.png)
+]
+
+---
+
+.left-code[
+.box-5[Add a theme]
+
+
+```r
+ggplot(data = penguins, 
+       mapping = aes(x = body_mass_g,
+                     y = bill_depth_mm,
+                     color = species)) +
+  geom_point() +
+  geom_smooth(method = "lm") + 
+  scale_color_viridis_d() +
+  facet_wrap(vars(island), ncol = 1) +
+  labs(x = "Body mass (g)", y = "Bill depth (mm)",
+       color = "Species", 
+       title = "Heavier penguins have taller bills",
+       subtitle = "And penguins live on different islands!",
+       caption = "Penguins!") +
+* theme_bw()
+```
+]
+
+.right-plot[
+![](02_grammar-of-graphics_files/figure-html/penguin-layers-8-1.png)
+]
+
+---
+
+.left-code[
+.box-5[Modify the theme]
+
+
+```r
+ggplot(data = penguins, 
+       mapping = aes(x = body_mass_g,
+                     y = bill_depth_mm,
+                     color = species)) +
+  geom_point() +
+  geom_smooth(method = "lm") + 
+  scale_color_viridis_d() +
+  facet_wrap(vars(island), ncol = 1) +
+  labs(x = "Body mass (g)", y = "Bill depth (mm)",
+       color = "Species", 
+       title = "Heavier penguins have taller bills",
+       subtitle = "And penguins live on different islands!",
+       caption = "Penguins!") +
+  theme_bw() +
+* theme(legend.position = "bottom",
+*       plot.title = element_text(face = "bold"))
+```
+]
+
+.right-plot[
+![](02_grammar-of-graphics_files/figure-html/penguin-layers-9-1.png)
+]
+
+---
+
+.left-code[
+.box-5[Finished!]
+
+
+```r
+ggplot(data = penguins, 
+       mapping = aes(x = body_mass_g,
+                     y = bill_depth_mm,
+                     color = species)) +
+  geom_point() +
+  geom_smooth(method = "lm") + 
+  scale_color_viridis_d() +
+  facet_wrap(vars(island), ncol = 1) +
+  labs(x = "Body mass (g)", y = "Bill depth (mm)",
+       color = "Species", 
+       title = "Heavier penguins have taller bills",
+       subtitle = "And penguins live on different islands!",
+       caption = "Penguins!") +
+  theme_bw() +
+  theme(legend.position = "bottom",
+        plot.title = element_text(face = "bold"))
+```
+]
+
+.right-plot[
+![](02_grammar-of-graphics_files/figure-html/penguin-layers-finished-1.png)
+]
+
+---
+
+layout: true
+class: title title-5
+
+---
+
+# So many possibilities!
+
+.pull-left[
+![](img/ggplot-layers@4x.png)
+]
+
+.pull-right[
+.box-inv-5[These were just a few examples of layers!]
+
+.box-5[See [the **ggplot2** documentation](https://ggplot2.tidyverse.org/reference/index.html) for&lt;br&gt;complete examples of everything you can do]
+]
+
+---
+
+# A true grammar
+
+.pull-left[
+.box-inv-5[With the grammar of graphics, we don't talk about specific chart *types*]
+
+.box-5.small[Hunt through Excel menus for a stacked bar chart and manually reshape your data to work with it]
+]
+
+.pull-right[
+.center[
+&lt;figure&gt;
+  &lt;img src="img/excel-chart-types.png" alt="Excel chart types" title="Excel chart types" width="78%"&gt;
+&lt;/figure&gt;
+]
+]
+
+---
+
+# A true grammar
+
+.pull-left[
+.box-inv-5[With the grammar of graphics, we *do* talk about specific chart *elements*]
+
+.box-5.small[Map a column to the x-axis, fill by a different variable, and `geom_col()` to get stacked bars]
+
+.box-5.small[Geoms can be interchangable&lt;br&gt;(e.g. switch `geom_violin()` to `geom_boxplot()`)]
+]
+
+.pull-right[
+.center[
+&lt;figure&gt;
+  &lt;img src="img/ggplot-layers@4x.png" alt="Grammar of graphics layers" title="Grammar of graphics layers" width="100%"&gt;
+&lt;/figure&gt;
+]
+]
+
+---
+
+# Describing graphs with the grammar
+
+.left-code[
+.box-5.small[Map wealth to the x-axis, health to the y-axis, add points, color by continent, size by population, scale the y-axis with a log, and facet by year]
+
+
+```r
+ggplot(filter(gapminder, 
+              year %in% c(2002, 2007)), 
+       aes(x = gdpPercap,
+           y = lifeExp,
+           color = continent,
+           size = pop)) +
+  geom_point() +
+  scale_x_log10() + 
+  facet_wrap(vars(year), ncol = 1)
+```
+]
+
+.right-plot[
+![](02_grammar-of-graphics_files/figure-html/describe-1-1.png)
+]
+
+---
+
+# Describing graphs with the grammar
+
+.left-code[
+.box-5.small[Map health to the x-axis, add a histogram with bins for every 5 years, fill and facet by continent]
+
+
+```r
+ggplot(gapminder_2007, 
+       aes(x = lifeExp,
+           fill = continent)) +
+  geom_histogram(binwidth = 5, 
+                 color = "white") +
+  guides(fill = FALSE) +  # Turn off legend
+  facet_wrap(vars(continent))
+```
+]
+
+.right-plot[
+![](02_grammar-of-graphics_files/figure-html/describe-2-1.png)
+]
+
+---
+
+# Describing graphs with the grammar
+
+.left-code[
+.box-5.small[Map continent to the x-axis, health to the y-axis, add violin plots and semi-transparent boxplots, fill by continent]
+
+
+```r
+ggplot(gapminder, 
+       aes(x = continent,
+           y = lifeExp,
+           fill = continent)) +
+  geom_violin() +
+  geom_boxplot(alpha = 0.5) +
+  guides(fill = FALSE)  # Turn off legend
+```
+]
+
+.right-plot[
+![](02_grammar-of-graphics_files/figure-html/describe-3-1.png)
+]
+
+---
+
+# Scales
+
+.box-inv-5[Scales change the properties of the variable mapping]
+
+&lt;table&gt;
+  &lt;tr&gt;
+    &lt;th class="cell-left"&gt;Example layer&lt;/th&gt;
+    &lt;th class="cell-left"&gt;What it does&lt;/th&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;scale_x_continuous()&lt;/code&gt;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Make the x-axis continuous&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;scale_x_continuous(breaks = 1:5)&amp;ensp;&lt;/code&gt;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Manually specify axis ticks&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;scale_x_log10()&lt;/code&gt;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Log the x-axis&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;scale_color_gradient()&lt;/code&gt;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Use a gradient&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;scale_fill_viridis_d()&lt;/code&gt;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Fill with discrete viridis colors&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;
+
+---
+
+# Scales
+
+.pull-left[
+
+.box-inv-5.small[`scale_x_log10()`]
+
+&lt;img src="02_grammar-of-graphics_files/figure-html/scale-example-1-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+--
+
+.pull-right[
+
+.box-inv-5.small[`scale_color_viridis_d()`]
+
+&lt;img src="02_grammar-of-graphics_files/figure-html/scale-example-2-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+layout: false
+class: title title-5 section-title-inv-5
+
+# Your turn #7
+
+.box-5[Make this density plot of `bill_length_mm` filled by `species`.&lt;br&gt;Use the viridis fill scale.]
+
+.box-5.small[For bonus fun, try a different viridis option like `plasma` or `inferno`.]
+
+&lt;img src="02_grammar-of-graphics_files/figure-html/unnamed-chunk-23-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+
+<div class="countdown" id="timer_61942b55" style="right:0;bottom:0;" data-warnwhen="0">
+<code class="countdown-time"><span class="countdown-digits minutes">03</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+
+---
+
+class: section-title-inv-5
+
+.left-code[
+
+```r
+ggplot(penguins, 
+       aes(x = bill_length_mm, 
+           fill = species)) +
+  geom_density(alpha = 0.75) +
+  scale_fill_viridis_d(option = "plasma")
+```
+]
+
+.right-plot[
+![](02_grammar-of-graphics_files/figure-html/your-turn-7-1.png)
+]
+
+---
+
+layout: true
+class: title title-5
+
+---
+
+# Facets
+
+.box-inv-5[Facets show subplots for different subsets of data]
+
+&lt;table&gt;
+  &lt;tr&gt;
+    &lt;th class="cell-left"&gt;Example layer&lt;/th&gt;
+    &lt;th class="cell-left"&gt;What it does&lt;/th&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;facet_wrap(vars(continent))&lt;/code&gt;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Plot for each continent&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;facet_wrap(vars(continent, year))&lt;/code&gt;&amp;emsp;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Plot for each continent/year&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;facet_wrap(..., ncol = 1)&lt;/code&gt;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Put all facets in one column&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;facet_wrap(..., nrow = 1)&lt;/code&gt;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Put all facets in one row&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;
+
+---
+
+# Facets
+
+.pull-left[
+
+.box-inv-5.small[`facet_wrap(vars(continent))`]
+
+&lt;img src="02_grammar-of-graphics_files/figure-html/facet-example-1-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+--
+
+.pull-right[
+
+.box-inv-5.small[`facet_wrap(vars(continent, year))`]
+
+&lt;img src="02_grammar-of-graphics_files/figure-html/facet-example-2-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+layout: false
+class: title title-5 section-title-inv-5
+
+# Your turn #8
+
+.box-5[Facet this scatterplot by `island`. Are there any interesting trends?]
+
+&lt;img src="02_grammar-of-graphics_files/figure-html/unnamed-chunk-25-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+
+<div class="countdown" id="timer_619428fd" style="right:0;bottom:0;" data-warnwhen="0">
+<code class="countdown-time"><span class="countdown-digits minutes">03</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+
+---
+
+class: section-title-inv-5
+
+.left-code[
+
+```r
+ggplot(penguins, 
+       aes(x = body_mass_g, 
+           y = bill_length_mm, 
+           color = species)) +
+  geom_point() +
+  facet_wrap(vars(island))
+```
+]
+
+.right-plot[
+![](02_grammar-of-graphics_files/figure-html/your-turn-8-1.png)
+]
+
+---
+
+layout: true
+class: title title-5
+
+---
+
+# Coordinates
+
+.box-inv-5[Change the coordinate system]
+
+&lt;table&gt;
+  &lt;tr&gt;
+    &lt;th class="cell-left"&gt;Example layer&lt;/th&gt;
+    &lt;th class="cell-left"&gt;What it does&lt;/th&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;coord_cartesian()&lt;/code&gt;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Standard x-y coordinate system&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;coord_cartesian(ylim = c(1, 10))&lt;/code&gt;&amp;emsp;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Zoom in where y is 1–10&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;coord_flip()&lt;/code&gt;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Switch x and y&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;coord_polar()&lt;/code&gt;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Use circular polar system&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;
+
+---
+
+# Coordinates
+
+.pull-left[
+
+.box-inv-5.small[`coord_cartesian(ylim = c(70, 80), xlim = c(10000, 30000))`]
+
+&lt;img src="02_grammar-of-graphics_files/figure-html/coord-example-1-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+--
+
+.pull-right[
+
+.box-inv-5.small[`coord_flip()`]
+
+&lt;img src="02_grammar-of-graphics_files/figure-html/coord-example-2-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+# Labels
+
+.box-inv-5[Add labels to the plot with a single `labs()` layer]
+
+&lt;table&gt;
+  &lt;tr&gt;
+    &lt;th class="cell-left"&gt;Example layer&lt;/th&gt;
+    &lt;th class="cell-left"&gt;What it does&lt;/th&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;labs(title = "Neat title")&lt;/code&gt;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Title&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;labs(caption = "Something")&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Caption&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;labs(y = "Something")&lt;/td&gt;
+    &lt;td class="cell-left"&gt;y-axis&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;labs(size = "Population")&lt;/code&gt;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Title of size legend&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;
+
+---
+
+# Labels
+
+.left-code[
+
+```r
+ggplot(gapminder_2007, 
+       aes(x = gdpPercap, y = lifeExp, 
+           color = continent, size = pop)) +
+  geom_point() +
+  scale_x_log10() +
+  labs(title = "Health and wealth grow together",
+       subtitle = "Data from 2007",
+       x = "Wealth (GDP per capita)",
+       y = "Health (life expectancy)",
+       color = "Continent",
+       size = "Population",
+       caption = "Source: The Gapminder Project")
+```
+]
+
+.right-plot[
+![](02_grammar-of-graphics_files/figure-html/labels-example-1.png)
+]
+
+---
+
+# Theme
+
+.box-inv-5[Change the appearance of anything in the plot]
+
+.box-5[There are many built-in themes]
+
+&lt;table&gt;
+  &lt;tr&gt;
+    &lt;th class="cell-left"&gt;Example layer&lt;/th&gt;
+    &lt;th class="cell-left"&gt;What it does&lt;/th&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;theme_grey()&lt;/code&gt;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Default grey background&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;theme_bw()&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Black and white&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;theme_dark()&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Dark&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="cell-left"&gt;&lt;code class="remark-inline-code"&gt;theme_minimal()&lt;/code&gt;&lt;/td&gt;
+    &lt;td class="cell-left"&gt;Minimal&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;
+
+---
+
+# Theme
+
+.pull-left[
+
+.box-inv-5.small[`theme_dark()`]
+
+&lt;img src="02_grammar-of-graphics_files/figure-html/theme-example-1-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+--
+
+.pull-right[
+
+.box-inv-5.small[`theme_minimal()`]
+
+&lt;img src="02_grammar-of-graphics_files/figure-html/theme-example-2-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+# Theme
+
+.box-inv-5[There are collections of pre-built themes online,&lt;br&gt;like [the **ggthemes** package](https://jrnold.github.io/ggthemes/)]
+
+.center[
+&lt;figure&gt;
+  &lt;img src="img/ggthemes.png" alt="ggthemes" title="ggthemes" width="45%"&gt;
+&lt;/figure&gt;
+]
+
+---
+
+# Theme
+
+.box-inv-5[Organizations often make their own custom themes, [like the BBC](https://bbc.github.io/rcookbook/)]
+
+.center[
+&lt;figure&gt;
+  &lt;img src="img/bbc-cookbook.png" alt="ggthemes" title="ggthemes" width="80%"&gt;
+&lt;/figure&gt;
+]
+
+---
+
+# Theme options
+
+.box-inv-5[Make theme adjustments with `theme()`]
+
+.box-5[There are a billion options here!]
+
+
+```r
+theme_bw() + 
+theme(legend.position = "bottom",
+      plot.title = element_text(face = "bold"),
+      panel.grid = element_blank(),
+      axis.title.y = element_text(face = "italic"))
+```
+
+---
+
+# Saving graphs
+
+.box-inv-5.medium[Use `ggsave()` to save a plot to your computer]
+
+.box-5[Store plot as an object, feed it to `ggsave()`]
+
+
+```r
+my_plot &lt;- ggplot(...)
+
+ggsave("plot_name.pdf", my_plot, width = 5, height = 3.5)
+ggsave("plot_name.png", my_plot, width = 5, height = 3.5)
+```
+
+
+
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="libs/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"ratio": "16:9",
+"navigation": {
+"scroll": false
+}
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

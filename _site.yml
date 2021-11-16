@@ -1,0 +1,21 @@
+name: "seacen-2021"
+exclude:
+  - Makefile
+output_dir: "_site"
+navbar:
+  title: "SEACEN 2021 workshop"
+  type: inverse
+  right:
+    - text: "Introduction to the tidyverse"
+      icon: "fas fa-chalkboard-teacher"
+      href: "01-tidyverse.html"
+    - text: "Data visualization with ggplot2"
+      icon: "fas fa-chalkboard-teacher"
+      href: "02-ggplot2.html"
+output: 
+  html_document:
+    css: "css/fixes.css"
+    theme:
+      version: 5
+      bootswatch: "pulse"
+      font_scale: 1.1

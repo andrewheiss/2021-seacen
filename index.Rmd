@@ -1,0 +1,26 @@
+---
+title: "Introduction to the tidyverse +<br>data visualization with ggplot2"
+subtitle: "SEACEN Online Course on Data Analytics<br>for Macroeconomic Surveillance"
+date: "November 16–17"
+---
+
+<div class="row" style="padding-top: 30px;">
+<div class="col-sm-6">
+
+**Andrew Heiss**  
+Andrew Young School of Policy Studies  
+Georgia State University  
+[andrewheiss.com](https://www.andrewheiss.com) • [\@andrewheiss](https://twitter.com/andrewheiss)
+
+</div>
+
+<div class="col-sm-6">
+
+Access the materials for these session below (or with the top menu above):
+
+<p class="text-center"><a class="btn btn-info" target="_blank" href="01-tidyverse.html"><i class="fas fa-chalkboard-teacher"></i> &ensp;Introduction to the tidyverse</a></p>
+
+<p class="text-center"><a class="btn btn-info" target="_blank" href="02-ggplot2.html"><i class="fas fa-chalkboard-teacher"></i> &ensp;Data visualization with ggplot2</a></p>
+
+</div>
+</div>

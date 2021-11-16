@@ -1,0 +1,31 @@
+---
+title: "Introduction to the tidyverse"
+date: "November 16, 2021"
+---
+
+---
+
+## Materials
+
+All the materials we'll use today are in this RStudio project. You can open this project in your browser without needing to install or download anything on your computer. Open this RStudio.cloud project (you'll need to create a free account really quick):
+
+<p class="text-center"><a class="btn btn-info btn-lg" target="_blank" href="https://rstudio.cloud/project/3233640"><i class="fab fa-r-project"></i> &ensp;RStudio.cloud project</a></p>
+
+Alternatively, you can download all the files to your computer. It is a `.zip` file, so make sure you extract/unzip it after downloading it (especially if [you're using Windows!](https://evalf21.classes.andrewheiss.com/resource/unzipping/))
+
+<p class="text-center"><a class="btn btn-info btn-lg" target="_blank" href="01_welcome-tidyverse.zip"><i class="fas fa-file-archive"></i> &ensp;RStudio project</a></p>
+
+If you're running this on your own computer (i.e. *not* in RStudio.cloud), you'll need to install two R packages to run everything: **tidyverse** and **googlesheets4**. Run this command in your R console to install everything:
+
+```{r eval=FALSE}
+install.packages(c("tidyverse", "googlesheets4"))
+```
+
+
+## Slides
+
+<p class="text-center"><a class="btn btn-success btn-lg" target="_blank" href="01_welcome-tidyverse/slides/01_tidyverse-dplyr.html"><i class="fas fa-external-link-alt"></i> &ensp;View all slides in new window</a> <a class="btn btn-success btn-lg" target="_blank" href="01_welcome-tidyverse/slides/01_tidyverse-dplyr.pdf" role="button"><i class="far fa-file-pdf"></i> &ensp;Download PDF of all slides</a></p>
+
+```{r embed-xaringan, echo=FALSE}
+xaringanExtra::embed_xaringan(url = "01_welcome-tidyverse/slides/01_tidyverse-dplyr.html", ratio = "16:9")
+```

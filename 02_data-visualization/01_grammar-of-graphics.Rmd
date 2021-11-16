@@ -1,0 +1,84 @@
+---
+title: "The grammar of graphics"
+output: html_document
+---
+
+```{r setup, warning=FALSE, message=FALSE}
+library(tidyverse)  # For ggplot, dplyr, and friends
+
+penguins <- read_csv("data/penguins.csv")  # Load data
+```
+
+## Figuring out what's in the data
+
+```{r}
+penguins
+```
+
+## Your Turn 2
+
+Add `color`, `size`, `alpha`, or `shape` aesthetics to your graph. Experiment.  
+
+```{r}
+ggplot(data = penguins) +
+  geom_point(mapping = aes(x = flipper_length_mm, 
+                           y = body_mass_g, 
+                           color = species))
+```
+
+## Your Turn 3
+
+Replace this scatterplot with one that draws boxplots. Use the cheatsheet. Try your best guess.
+
+```{r}
+ggplot(penguins) +
+  geom_point(aes(x = species, y = body_mass_g))
+```
+
+## Your Turn 4
+
+Make a histogram of the `bill_length_mm` variable from `penguins`.
+
+```{r}
+ggplot(data = penguins) 
+```
+
+## Your Turn 5
+
+Make a density plot of `bill_length_mm` filled by `species`.
+
+```{r}
+ggplot(data = penguins) 
+```
+
+## Your Turn 6
+
+Predict what this code will do. Then run it.
+
+```{r}
+ggplot(data = penguins) +
+  geom_point(mapping = aes(x = body_mass_g, 
+                           y = bill_depth_mm, 
+                           color = species)) +
+  geom_smooth(mapping = aes(x = body_mass_g, 
+                            y = bill_depth_mm, 
+                            color = species))
+```
+
+## Your Turn 7
+
+Make a density plot of `bill_length_mm` filled by `species`. *Use the viridis fill scale.*
+
+```{r}
+ggplot(data = penguins) 
+```
+
+## Your Turn 8
+
+Facet this scatterplot by `island`. Are there any interesting trends?
+
+```{r}
+ggplot(penguins, 
+       aes(x = body_mass_g, y = bill_length_mm, color = species)) +
+  geom_point()
+```
